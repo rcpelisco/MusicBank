@@ -44,15 +44,17 @@
 								<a href="{{ url_for('songs.download', id=song.id) }}"
 									class="btn btn-primary btn-sm fa fa-download">
 								</a>
-                <button data-toggle="modal" data-target="#editModal"
-                  class="btn btn-sm btn-danger fa fa-edit edit-button" 
-                  data-id="{{ song.id }}"></button>
+								{% if current_user.is_authenticated %}
+								<button data-toggle="modal" data-target="#editModal"
+									class="btn btn-sm btn-danger fa fa-edit edit-button" 
+									data-id="{{ song.id }}"></button>
 								<a href="{{ url_for('songs.delete', id=song.id) }}"
 									class="btn btn-danger btn-sm fa fa-trash">
 								</a>
-								<a href="#"
-                  class="btn btn-default fa fa-play play-button" data-file="{{ song.file[0].name_on_server }}{{ song.file[0].extension }}"
-                    data-title="{{ song.title }} - {{ song.artist.name }}">
+								{% endif %}
+								<a href="#" class="btn btn-default fa fa-play play-button" 
+									data-file="{{ song.file[0].name_on_server }}{{ song.file[0].extension }}"
+									data-title="{{ song.title }} - {{ song.artist.name }}">
 								</a>
 							</td>
 						</tr>
@@ -135,7 +137,7 @@
 </div>
 {% include "upload_modal.html" %}
 {% include "edit_modal.html" %}
-{% endblock %}
+{% endblock content %}
 
 {% block scripts %}
 <script>

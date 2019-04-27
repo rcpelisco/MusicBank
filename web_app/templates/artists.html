@@ -61,7 +61,8 @@
                       class="btn btn-danger btn-sm fa fa-trash">
                     </a>
                     <a href="#"
-                      class="btn btn-default fa fa-play" onclick="player('{{ song.file[0].name_on_server }}{{ song.file[0].extension }}','{{ song.title }} - {{ song.artist.name }}')">
+                  class="btn btn-default fa fa-play play-button" data-file="{{ song.file[0].name_on_server }}{{ song.file[0].extension }}"
+                    data-title="{{ song.title }} - {{ song.artist.name }}">
                     </a>
                   </td>
                 </tr>
@@ -81,26 +82,26 @@
   {% endfor %}
 </div>
 <script>
-      var old_sel = "";
-      function  showlist(id) {
-        if(old_sel == id){
-          close_all_list();
-          old_sel ="cleared";
-        }else{
-          close_all_list();
-          document.getElementById("list_"+id).style.display="block";
-          old_sel = id ;
-        }
-        console.log(id);
-        console.log(old_sel);
+  var old_sel = "";
+  function  showlist(id) {
+    if(old_sel == id){
+      close_all_list();
+      old_sel ="cleared";
+    }else{
+      close_all_list();
+      document.getElementById("list_"+id).style.display="block";
+      old_sel = id ;
+    }
+    console.log(id);
+    console.log(old_sel);
+  }
+  function close_all_list() {
+      var x = document.getElementsByClassName("artist_list");
+      var i;
+      for (i = 0; i < x.length; i++) {
+        x[i].style.display = 'none';
       }
-      function close_all_list() {
-          var x = document.getElementsByClassName("artist_list");
-          var i;
-          for (i = 0; i < x.length; i++) {
-            x[i].style.display = 'none';
-          }
-      }
+  }
 </script>
 {% include "upload_modal.html" %}
 {% include "edit_modal.html" %}

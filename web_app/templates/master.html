@@ -89,15 +89,6 @@
   <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
   <script>
     $(function() {
-      let socket = io.connect('http://' + document.domain + ':' + location.port)
-
-      socket.on('connect', function() {
-        socket.send('User has connected!')
-      })
-
-      socket.on('cue', function(message) {
-        player(message.file, message.title)
-      })
 
       $('.play-button').click(function() {
         let file = $(this).attr('data-file')
@@ -122,13 +113,14 @@
           album[0].selectize.disable()
           if(value != "") {
             album[0].selectize.enable()
+            album[0].selectize.clear()
             album[0].selectize.clearOptions()
             album[0].selectize.load(function(callback) {
               $.ajax({
                 url: '/albums/get_from_artist/' + value,
                 success: function(results) {
-                    album[0].selectize.enable();
                     callback(results);
+                    album[0].selectize.enable();
                 },
                 error: function() {
                     callback();
