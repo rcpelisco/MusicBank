@@ -1,0 +1,158 @@
+{% extends 'master.html' %}
+
+{% block content %}
+<div class="row">
+	<ol class="breadcrumb">
+		<li><a href="#">
+			<em class="fa fa-home"></em>
+		</a></li>
+		<li class="active">All Songs</li>
+	</ol>
+</div><!--/.row-->
+
+<div class="row">
+	<div class="col-lg-12">
+		<h1 class="page-header"><i class="fa fa-music"></i> All Songs | <span style="font-size: 20px;"> {{songs|length}} items</span>
+      {% if current_user.is_authenticated %}
+			<a href="" class="btn btn-primary" data-toggle="modal" 
+				data-target="#uploadModal">Upload</a>
+      {% endif %}
+		</h1>
+	</div>
+</div><!--/.row-->
+
+<div class="panel panel-container">
+	<div class="panel-body">
+		<div class="row">
+			<div class="col-lg-12">
+				<table class="table" id="myTable">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Artist</th>
+							<th>Album</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for song in songs %}
+						<tr>
+							<td>{{ song.title }}</td>
+							<td>{{ song.artist.name }}</td>
+							<td>{{ song.album.name }}</td>
+							<td>
+								<a href="{{ url_for('songs.download', id=song.id) }}"
+									class="btn btn-primary btn-sm fa fa-download">
+								</a>
+                <button data-toggle="modal" data-target="#editModal"
+                  class="btn btn-sm btn-danger fa fa-edit edit-button" 
+                  data-id="{{ song.id }}"></button>
+								<a href="{{ url_for('songs.delete', id=song.id) }}"
+									class="btn btn-danger btn-sm fa fa-trash">
+								</a>
+								<a href="#"
+                  class="btn btn-default fa fa-play play-button" data-file="{{ song.file[0].name_on_server }}{{ song.file[0].extension }}"
+                    data-title="{{ song.title }} - {{ song.artist.name }}">
+								</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div><!--/.row-->
+	<script>
+		var inswitch = true;
+		function sortTable(lsorts) {
+			var table, rows, switching, i, x, y, shouldSwitch;
+			table = document.getElementById("myTable");
+			switching = true;
+			/*Make a loop that will continue until
+			no switching has been done:*/
+			if(inswitch){
+				inswitch = false;
+				while (switching) {
+					//start by saying: no switching is done:
+					switching = false;
+					rows = table.rows;
+					/*Loop through all table rows (except the
+					first, which contains table headers):*/
+					for (i = 1; i < (rows.length - 1); i++) {
+						//start by saying there should be no switching:
+						shouldSwitch = false;
+						/*Get the two elements you want to compare,
+						one from current row and one from the next:*/
+						x = rows[i].getElementsByTagName("TD")[lsorts];
+						y = rows[i + 1].getElementsByTagName("TD")[lsorts];
+						//check if the two rows should switch place:
+						if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+							//if so, mark as a switch and break the loop:
+							shouldSwitch = true;
+							break;
+						}
+					}
+					if (shouldSwitch) {
+						/*If a switch has been marked, make the switch
+						and mark that a switch has been done:*/
+						rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+						switching = true;
+					}
+				}
+			}
+			else{
+				inswitch = true;
+				while (switching) {
+					//start by saying: no switching is done:
+					switching = false;
+					rows = table.rows;
+					/*Loop through all table rows (except the
+					first, which contains table headers):*/
+					for (i = 1; i < (rows.length - 1); i++) {
+						//start by saying there should be no switching:
+						shouldSwitch = false;
+						/*Get the two elements you want to compare,
+						one from current row and one from the next:*/
+						x = rows[i].getElementsByTagName("TD")[lsorts];
+						y = rows[i + 1].getElementsByTagName("TD")[lsorts];
+						//check if the two rows should switch place:
+						if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+							//if so, mark as a switch and break the loop:
+							shouldSwitch = true;
+							break;
+						}
+					}
+					if (shouldSwitch) {
+						/*If a switch has been marked, make the switch
+						and mark that a switch has been done:*/
+						rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+						switching = true;
+					}
+				}
+			}
+		}
+		</script>
+</div>
+{% include "upload_modal.html" %}
+{% include "edit_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(function() {
+    
+    
+    $('#songSearch').keyup(function() {
+      let key_word = $(this).val();
+      $.ajax({
+        url: '/search/' + key_word,
+        type: 'GET',
+        success: function(data) {
+          console.log(data)
+        }
+      })
+      table.search(key_word).draw();
+    })
+  })
+</script>
+{% endblock scripts %}

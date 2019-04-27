@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Lumino - Dashboard</title>
+	<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/jquery.dataTables.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/selectize.bootstrap3.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+</head>
+<body>
+	<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#sidebar-collapse"><span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><span>Music</span>Bank</a>
+        
+        {% if current_user.is_authenticated %}
+        <ul class="nav navbar-top-links navbar-right">
+          <li class="dropdown"><a class="dropdown-toggle count-info" 
+            href="{{ url_for('users.logout') }}">
+            <em class="fa fa-sign-out"></em>
+          </a></li>
+        </ul>
+        {% else %}
+        <ul class="nav navbar-top-links navbar-right">
+            <li class="dropdown"><a class="dropdown-toggle count-info" 
+              href="{{ url_for('users.login') }}">
+              <em class="fa fa-sign-in"></em>
+            </a></li>
+        </ul>
+        {% endif %}
+      </div>
+		</div><!-- /.container-fluid -->
+	</nav>
+  
+  {% include 'sidebar.html' %}
+	
+	<div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
+    <div class="col-lg-12" id="sresult">
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <br>
+        {% for category, message in messages %}
+          <div class="alert alert-{{category}}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div id='cbody'>
+      {% block content %}
+      {% endblock %}
+    </div>
+    
+    <div class="row">
+			<div class="col-sm-12">
+				<p class="back-link">Lumino Theme by <a href="https://www.medialoot.com">Medialoot</a></p>
+			</div>
+		</div><!--/.row-->
+
+
+	<div style=" display: none; background-color:grey;height: 80px;position: fixed;z-index: 99;right: 30px;bottom: 10px;" class="row">
+		<div class="col-sm">
+			<p>Song Title</p>
+		</div>
+		<div>
+        <audio class="navbar-right black" controls> 
+				<source src="" />
+			</audio> 
+		</div>
+	</div>
+	</div><!--/.main-->
+	<script src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/selectize.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+  <script>
+    $(function() {
+      let socket = io.connect('http://' + document.domain + ':' + location.port)
+
+      socket.on('connect', function() {
+        socket.send('User has connected!')
+      })
+
+      socket.on('cue', function(message) {
+        player(message.file, message.title)
+      })
+
+      $('.play-button').click(function() {
+        let file = $(this).attr('data-file')
+        let title = $(this).attr('data-title')
+        socket.emit('play_music', { file: file, title: title });
+      })
+
+      let album = $('#album').selectize({
+        create: function(input, callback) {
+          $.post('{{ url_for("albums.create") }}', { 'artist_id': $('#artist').val(), 'album_name': input}, function(data) {
+            callback({ value: data.id, text: data.name })
+          })
+        },
+        sortField: {
+          field: 'text',
+          direction: 'asc'
+        }
+      })
+
+      let artist = $('#artist').selectize({
+        onChange: function(value) {
+          album[0].selectize.disable()
+          if(value != "") {
+            album[0].selectize.enable()
+            album[0].selectize.clearOptions()
+            album[0].selectize.load(function(callback) {
+              $.ajax({
+                url: '/albums/get_from_artist/' + value,
+                success: function(results) {
+                    album[0].selectize.enable();
+                    callback(results);
+                },
+                error: function() {
+                    callback();
+                }
+              })
+            })
+          }
+        },
+        create: function(input, callback) {
+          $.post('/artists/create', {'artist_name': input}, function(data) {
+            callback({ value: data.id, text: data.name })
+          })
+        },
+        sortField: {
+          field: 'text',
+          direction: 'asc'
+        }
+      })
+
+      function player(file,name){
+        let player = document.getElementById('player')
+        document.getElementById('playing').innerHTML=name;
+        player.src = "../static/uploads/" + file;
+        player.pause()
+        setTimeout(function() {
+          player.play()
+        }, 200)
+      }
+
+      $('.edit-button').on('click', function() {
+        let id = $(this).attr('data-id')
+        $('form[action="/songs/update/"]').attr('action', '/songs/update/' + id)
+        $.get('songs/edit/' + id, function(data) {
+          $('#edit_title').val(data['title'])
+        })
+      })
+    })
+
+    let table = $('#myTable').DataTable({
+      paging: false,
+      info: false,
+      columns: [
+        null,
+        { "searchable": false },
+        { "searchable": false },
+        { "searchable": false }
+      ]
+    })
+  </script>
+	{% block scripts %}
+  {% endblock scripts %}
+</body>
+</html>

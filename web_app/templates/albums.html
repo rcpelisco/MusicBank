@@ -1,0 +1,86 @@
+{% extends 'master.html' %}
+
+{% block content %}
+<div class="row">
+  <ol class="breadcrumb">
+    <li><a href="#">
+      <em class="fa fa-home"></em>
+    </a></li>
+    <li class="active">Albums</li>
+  </ol>
+</div><!--/.row-->
+
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="page-header"><i class="fa fa-folder"></i> Albums 
+    {% if current_user.is_authenticated %}
+      <a href="#" class="btn btn-primary" data-toggle="modal" 
+        data-target="#uploadModal">Upload</a>
+    {% endif %}
+    </h1>
+  </div>
+</div><!--/.row-->
+
+{% for album in albums %}
+<div class="panel panel-default">
+  <div class="panel-heading" onclick="showlist('{{ album.name }}')">
+    </i>{{ album.name }} | <span class="">{{album.songs|length}} song/s included</span>
+  </div>
+  <div class="album_list panel-body" id="list_{{ album.name }}" hidden>
+    <div class="row">
+      <div class="col-lg-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <td width="40%">Title</td>
+              <td width="40%">Artist</td>
+              <td width="20%">Action</td>
+            </tr>
+          </thead>
+          <tbody>
+            {% for song in album.songs %}
+            <tr>
+              <td>{{ song.title }}</td>
+              <td>{{ song.artist }}</td>
+              <td>
+                <a href="{{ url_for('songs.download', id=song.id) }}"
+                  class="btn btn-primary btn-sm">
+                  <i class="fa fa-download"></i>
+                </a>
+                <a href="#"
+                  class="btn btn-primary btn-danger fa fa-play" onclick="player('{{song.id}}','{{song.title}} - {{song.artist}}')">
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!--/.row-->
+</div>
+{% endfor %}
+<script>
+      var old_sel = "";
+      function  showlist(id) {
+        if(old_sel == id){
+          close_all_list();
+          old_sel ="cleared";
+        }else{
+          close_all_list();
+          document.getElementById("list_"+id).style.display="block";
+          old_sel = id ;
+        }
+        console.log(id);
+        console.log(old_sel);
+      }
+      function close_all_list() {
+          var x = document.getElementsByClassName("album_list");
+          var i;
+          for (i = 0; i < x.length; i++) {
+            x[i].style.display = 'none';
+          }
+      }
+</script>
+{% include "upload_modal.html" %}
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'master.html' %}
+
+{% block content %}
+<div class="row">
+  <ol class="breadcrumb">
+    <li><a href="#">
+      <em class="fa fa-home"></em>
+    </a></li>
+    <li class="active">Artists</li>
+  </ol>
+</div><!--/.row-->
+
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="page-header"><i class="fa fa-user"></i> Artists 
+      {% if current_user.is_authenticated %}
+      <a href="#" class="btn btn-primary" data-toggle="modal" 
+        data-target="#uploadModal">Upload</a>
+      {% endif %}
+    </h1>
+  </div>
+</div><!--/.row-->
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  {% for artist in artists %}
+  <div class="panel panel-primary">
+    <div class="panel-heading" role="tab" id="heading{{artist.id}}">
+      <div class="collapsed" role="button" data-toggle="collapse" 
+        data-parent="#accordion" href="#collapse{{artist.id}}" 
+        aria-expanded="false" aria-controls="collapse{{artist.id}}">
+        {{ artist.name }} | <span>{{ artist.albums|length }} Albums</span> | 
+        <span>{{artist.songs|length}} Songs</span>
+    </div>
+    </div>
+    <div id="collapse{{artist.id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{artist.id}}">
+      <div class="panel-body">
+        <h4>Albums</h4>
+        <ul class="list-unstyled">
+          {% for album in artist.albums %}
+          <li>  
+            <h2 style="margin-bottom: 5px">{{ album.name }}</h2>
+            {% if album.songs|length > 0 %}
+            <table class="table">
+              <thead>
+                <td width="5%"><small>#</small></td>
+                <td width="70%"><small>TITLE</small></td>
+                <td><small>ACTIONS</small></td>
+              </thead>
+              <tbody>
+                {% for song in album.songs %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ song.title }}</td>
+                  <td>
+                      <a href="{{ url_for('songs.download', id=song.id) }}"
+                      class="btn btn-primary btn-sm fa fa-download">
+                    </a>
+                    <button data-toggle="modal" data-target="#editModal"
+                      class="btn btn-sm btn-danger fa fa-edit edit-button" 
+                      data-id="{{ song.id }}"></button>
+                    <a href="{{ url_for('songs.delete', id=song.id) }}"
+                      class="btn btn-danger btn-sm fa fa-trash">
+                    </a>
+                    <a href="#"
+                      class="btn btn-default fa fa-play" onclick="player('{{ song.file[0].name_on_server }}{{ song.file[0].extension }}','{{ song.title }} - {{ song.artist.name }}')">
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+              No songs in this album yet.
+            {% endif %}
+          </li>
+          <hr>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+      var old_sel = "";
+      function  showlist(id) {
+        if(old_sel == id){
+          close_all_list();
+          old_sel ="cleared";
+        }else{
+          close_all_list();
+          document.getElementById("list_"+id).style.display="block";
+          old_sel = id ;
+        }
+        console.log(id);
+        console.log(old_sel);
+      }
+      function close_all_list() {
+          var x = document.getElementsByClassName("artist_list");
+          var i;
+          for (i = 0; i < x.length; i++) {
+            x[i].style.display = 'none';
+          }
+      }
+</script>
+{% include "upload_modal.html" %}
+{% include "edit_modal.html" %}
+{% endblock %}
